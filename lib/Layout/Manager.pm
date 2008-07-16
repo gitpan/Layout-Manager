@@ -2,7 +2,7 @@ package Layout::Manager;
 use Moose;
 
 our $AUTHORITY = 'cpan:GPHAT';
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use MooseX::AttributeHelpers;
 
@@ -56,12 +56,19 @@ sub remove_component {
     }
 
     my $count = 0;
-    foreach my $comp (@{ $self->components }) {
-        if(defined($comp) && $comp->name eq $name) {
+    my $del;
+    foreach my $c (@{ $self->components }) {
+        my $comp = $c->{component};
+
+        if(defined($comp) && defined($comp->name) && $comp->name eq $name) {
+
             delete($self->components->[$count]);
+            $del++;
         }
         $count++;
     }
+
+    return $del;
 }
 
 sub validate_component {
@@ -182,7 +189,8 @@ Get the component at the specified index.
 
 =item I<remove_component>
 
-Removes a component.  B<Components must have names to be removed.>
+Removes a component.  B<Components must have names to be removed.>  Returns 
+the number of components removed.
 
 =item I<validate_component>
 
