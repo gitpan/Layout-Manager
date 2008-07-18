@@ -2,7 +2,7 @@ package Layout::Manager;
 use Moose;
 
 our $AUTHORITY = 'cpan:GPHAT';
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use MooseX::AttributeHelpers;
 
@@ -37,6 +37,21 @@ sub do_prepare {
     foreach my $c (@{ $self->components }) {
         $c->{component}->prepare();
     }
+}
+
+sub find_component {
+    my ($self, $name) = @_;
+
+    foreach my $c (@{ $self->components }) {
+        my $comp = $c->{component};
+
+        if(defined($comp) && defined($comp->name) && $comp->name eq $name) {
+
+            return $comp;
+        }
+    }
+
+    return undef;
 }
 
 sub remove_component {
@@ -182,6 +197,10 @@ Lays out this managers components in the specified container.
 =item I<do_prepare>
 
 Calls prepare on all this layout manager's child components.
+
+=item I<find_component>
+
+Find a component with the given name.
 
 =item I<get_component>
 
