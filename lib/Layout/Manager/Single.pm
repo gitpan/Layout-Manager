@@ -3,14 +3,17 @@ use Moose;
 
 extends 'Layout::Manager';
 
-sub do_layout {
+override('do_layout', sub {
     my ($self, $container) = @_;
 
     die("Need a container") unless defined($container);
     return unless $self->component_count;
 
-    my $cheight = $container->inside_height;
-    my $cwidth = $container->inside_width;
+    my $bbox = $container->inside_bounding_box;
+    my $cwidth = $bbox->width;
+    my $cheight = $bbox->height;
+    my $x = $bbox->origin->x;
+    my $y = $bbox->origin->y;
 
     my $count = 0;
     foreach my $c (@{ $self->components }) {
@@ -21,14 +24,14 @@ sub do_layout {
 
         $comp->width($cwidth);
         $comp->height($cheight);
-        $comp->origin->x($comp->padding->left + $comp->margins->left + $comp->border->width);
-        $comp->origin->y($comp->padding->top + $comp->margins->top + $comp->border->width);
+        $comp->origin->x($x);
+        $comp->origin->y($y);
 
         if($comp->can('do_layout')) {
             $comp->do_layout($comp);
         }
     }
-}
+});
 
 __PACKAGE__->meta->make_immutable;
 
