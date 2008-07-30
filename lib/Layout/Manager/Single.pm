@@ -6,9 +6,6 @@ extends 'Layout::Manager';
 override('do_layout', sub {
     my ($self, $container) = @_;
 
-    die("Need a container") unless defined($container);
-    return unless $self->component_count;
-
     my $bbox = $container->inside_bounding_box;
     my $cwidth = $bbox->width;
     my $cheight = $bbox->height;
@@ -16,7 +13,7 @@ override('do_layout', sub {
     my $y = $bbox->origin->y;
 
     my $count = 0;
-    foreach my $c (@{ $self->components }) {
+    foreach my $c (@{ $container->components }) {
 
         my $comp = $c->{component};
 
@@ -41,7 +38,7 @@ no Moose;
 __END__
 =head1 NAME
 
-Layout::Manager::Single - One-size veritcal layout manager
+Layout::Manager::Single - One-size vertical layout manager
 
 =head1 DESCRIPTION
 

@@ -2,11 +2,43 @@ package Layout::Manager;
 use Moose;
 
 our $AUTHORITY = 'cpan:GPHAT';
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 use MooseX::AttributeHelpers;
 
 sub do_layout {
+    my ($self, $container, $parent) = @_;
+
+    die("Need a container") unless defined($container);
+    return unless $container->component_count;
+
+    # If a parent container is passed in...
+    # if(defined($parent)) {
+    #     my $bbox = $parent->inside_bounding_box;
+    #     # And either of our minimum dimensions are unset then set them
+    #     # to the size of our parent, as we have no better guidance...
+    #     # TODO This will likely cause problems...
+    #     unless($container->width) {
+    #         $container->width($bbox->width);
+    #     }
+    #     unless($container->height) {
+    #         $container->height($bbox->height);
+    #     }
+    # }
+
+    # Layout child containers first, since we can't fit them into this one
+    # without knowing the sizes.
+    foreach my $c (@{ $container->components }) {
+
+        my $comp = $c->{component};
+
+        next unless defined($comp) && $comp->visible;
+
+        if($comp->can('do_layout')) {
+            $comp->do_layout($comp, $container, $self);
+        }
+    }
+
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -30,7 +62,7 @@ to serve as a base for outside implementations.
     use Layout::Manager;
 
     my $foo = Layout::Manager->new();
-    ...
+    $foo->do_layout($component);
 
 =head1 USING A LAYOUT MANAGER
 
@@ -42,16 +74,26 @@ with slightly different second arguments, but the general case will be:
 The contents of B<$constraints> must be discerned by reading the documentation
 for the layout manager you are using.
 
-The B<$comp> argument must be a class that implements the
-L<Layout::Manager::Component> role.  For more information on Roles please read
-the L<Moose::Role> documentation on the CPAN.
+The B<$comp> argument must be a L<Graphics::Primitive::Component>.
+
+Layout manager works hand-in-hand with Graphics::Primitive, so you'll want to
+check out the L<lifecyle|Graphics::Primitive::Component#LIFECYCLE> documented
+in L<Graphics::Primitive::Component>.  It will look something like this:
+
+  $cont->add_component($foo, { some => metadata });
+  # You'll need a driver from Graphics::Primitive if there are any driver
+  # dependent doodads, like textboxes.
+  $cont->prepare($driver);
+  my $lm = new Layout::Manager::SomeImplementation;
+  $lm->do_layout($cont);
+  $cont->pack;
+  $driver->draw($cont);
 
 When you are ready to lay out your container, you'll need to call the
 L<do_layout> method with a single argument: the component in which you are
-laying things out.  This object is also expected to implement aforementioned
-L<Layout::Manager::Component> role.  When I<do_layout> returns all of the
-components should be resized and repositioned according to the rules of the
-Layout::Manager implementation.
+laying things out. When I<do_layout> returns all of the components should be
+resized and repositioned according to the rules of the Layout::Manager
+implementation.
 
 =head1 WRITING A LAYOUT MANAGER
 
@@ -107,7 +149,7 @@ Infinity Interactive, L<http://www.iinteractive.com>
 
 =head1 SEE ALSO
 
-perl(1)
+perl(1), L<Graphics::Primitive>
 
 =head1 COPYRIGHT & LICENSE
 
