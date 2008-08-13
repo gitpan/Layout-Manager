@@ -18,7 +18,7 @@ no_index:
     - t
 requires:
   Geometry::Primitive: 0.09
-  Graphics::Primitive: 0.14
+  Graphics::Primitive: 0.16
   Moose: 0.54
   MooseX::AttributeHelpers: 0.12
-version: 0.11
+version: 0.12

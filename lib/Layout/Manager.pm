@@ -2,7 +2,7 @@ package Layout::Manager;
 use Moose;
 
 our $AUTHORITY = 'cpan:GPHAT';
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use MooseX::AttributeHelpers;
 
@@ -16,7 +16,10 @@ sub do_layout {
     my ($self, $container) = @_;
 
     die("Need a container") unless defined($container);
-    return unless $container->component_count;
+
+    return 0 unless $container->component_count;
+
+    return 0 if $container->prepared && $self->_check_container($container);
 
     # Layout child containers first, since we can't fit them into this one
     # without knowing the sizes.
@@ -28,9 +31,33 @@ sub do_layout {
 
         if($comp->can('do_layout')) {
             $comp->do_layout($comp);
+            $comp->prepared(1);
         }
     }
 
+    $container->prepared(1);
+    return 1;
+}
+
+sub _check_container {
+    my ($self, $cont) = @_;
+
+    foreach my $c (@{ $cont->components }) {
+        my $comp = $c->{component};
+
+        unless($comp->prepared) {
+            $cont->prepared(0);
+            return 0;
+        }
+        if($comp->can('do_layout')) {
+            if(!$self->_check_container($comp)) {
+                $comp->prepared(0);
+                return 0;
+            }
+        }
+    }
+
+    return 1;
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -76,8 +103,6 @@ check out the L<lifecyle|Graphics::Primitive::Component#LIFECYCLE> documented
 in L<Graphics::Primitive::Component>.  It will look something like this:
 
   $cont->add_component($foo, { some => metadata });
-  # You'll need a driver from Graphics::Primitive if there are any driver
-  # dependent doodads, like textboxes.
   $driver->prepare($cont);
   my $lm = new Layout::Manager::SomeImplementation;
   $lm->do_layout($cont);
@@ -89,6 +114,13 @@ L<do_layout> method with a single argument: the component in which you are
 laying things out. When I<do_layout> returns all of the components should be
 resized and repositioned according to the rules of the Layout::Manager
 implementation.
+
+=head2 PREPARATION
+
+Subsequent calls to do_layout will be ignored if the Container is prepared.
+The Container's C<prepared> flag and the flags of all it's children are
+checked, so any modifications to B<any> child component will cause the entire
+container (and any container children) to be laid out again.
 
 =head1 WRITING A LAYOUT MANAGER
 
