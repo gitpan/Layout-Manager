@@ -8,8 +8,8 @@ build_requires 'Test::More';
 
 requires 'Moose' => '0.54';
 requires 'MooseX::AttributeHelpers' => '0.12';
-requires 'Geometry::Primitive' => '0.10';
-requires 'Graphics::Primitive' => '0.32';
+requires 'Geometry::Primitive' => '0.13';
+requires 'Graphics::Primitive' => '0.34';
 
 tests_recursive;
 
