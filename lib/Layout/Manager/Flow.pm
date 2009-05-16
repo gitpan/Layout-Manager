@@ -107,11 +107,11 @@ Layout::Manager::Flow - Directional layout manager
 =head1 DESCRIPTION
 
 Layout::Manager::Flow is a layout manager that anchors components in one of
-the four cardinal directions.  The first comp
+the four cardinal directions.
 
 When you instantiate a Flow manager, you may supply it with an anchor value
 which may be one of north, south, east or west.  The example below shows
-how the default anchor value of 'north' works when you add two components.
+how the default anchor value of north works when you add two components.
 
                  north
   +--------------------------------+
@@ -125,14 +125,14 @@ how the default anchor value of 'north' works when you add two components.
   +--------------------------------+
 
 Components are placed in the order they are added.  If two items are added
-with a  'north' anchor then the first item will be rendered above the
+with a 'north' anchor then the first item will be rendered above the
 second.  Components will be expanded to take up all space perpendicular to
 their anchor.  North and south will expand widths while east and west will
 expand heights.
 
 Flow is similar to Java's
-L<FlowLayout|http://java.sun.com/docs/books/tutorial/uiswing/layout/flow.html>
-it does not, however, center or wrap components.  These features may be added
+L<FlowLayout|http://java.sun.com/docs/books/tutorial/uiswing/layout/flow.html>.
+It does not, however, center or wrap components.  These features may be added
 in the future if they are needed.
 
 =head1 SYNOPSIS
