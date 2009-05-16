@@ -2,7 +2,7 @@ package Layout::Manager;
 use Moose;
 
 our $AUTHORITY = 'cpan:GPHAT';
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 use MooseX::AttributeHelpers;
 
@@ -64,7 +64,7 @@ Layout::Manager - 2D Layout Management
 =head1 SYNOPSIS
 
 Layout::Manager provides a simple interface for creating layout managers, or
-classes that size and position components withing a container.
+classes that size and position components within a container.
 
 A few managers are provided for reference, but this module is primarily meant
 to serve as a base for outside implementations.

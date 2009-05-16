@@ -25,4 +25,4 @@ requires:
   MooseX::AttributeHelpers: 0.12
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.21
+version: 0.22
