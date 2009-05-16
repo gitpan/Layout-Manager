@@ -20,9 +20,9 @@ no_index:
     - t
 requires:
   Geometry::Primitive: 0.10
-  Graphics::Primitive: 0.32
+  Graphics::Primitive: 0.42
   Moose: 0.54
   MooseX::AttributeHelpers: 0.12
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.23
+version: 0.24
