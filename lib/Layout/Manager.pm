@@ -2,7 +2,7 @@ package Layout::Manager;
 use Moose;
 
 our $AUTHORITY = 'cpan:GPHAT';
-our $VERSION = '0.24';
+our $VERSION = '0.25';
 
 use MooseX::AttributeHelpers;
 
@@ -23,7 +23,6 @@ sub do_layout {
 
         if($comp->can('do_layout')) {
             $comp->do_layout($comp);
-            # $comp->prepared(1);
         }
     }
 

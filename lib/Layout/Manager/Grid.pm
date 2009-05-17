@@ -21,8 +21,6 @@ has 'columns' => (
 override('do_layout', sub {
     my ($self, $container) = @_;
 
-    super;
-
     my $bbox = $container->inside_bounding_box;
 
     my $cwidth = $bbox->width;
@@ -93,8 +91,8 @@ override('do_layout', sub {
         }
         # If the height wasn't set, set the container's height to the total
         # of all rows
-        $container->height($container->outside_height + $ch);
-        $cheight = $container->height;
+        $cheight = $container->outside_height + $ch;
+        $container->minimum_height($cheight);
     }
 
     if($cwidth) {
@@ -109,8 +107,8 @@ override('do_layout', sub {
         }
         # If the width wasn't set, set the container's width to the total of
         # all cols
-        $container->width($container->outside_width + $cw);
-        $cwidth = $container->width;
+        $cwidth = $container->outside_width + $cw;
+        $container->minimum_width($cwidth);
     }
 
     my $ox = $bbox->origin->x;
@@ -175,6 +173,8 @@ override('do_layout', sub {
         $comp->height($cell_height);
     }
 
+    super;
+
     return 1;
 });
 
@@ -214,9 +214,9 @@ create 6 cells that consume 33% of the width and 50% of the height.
 Components are placed by specifying the cell they reside in via the row and 
 column number.
 
-  $container->add_component($comp, { row => 1, column => 3 });
+  $container->add_component($comp, { row => 0, column => 3 });
 
-  $container->add_component($comp, { row => 1, column => 2, height => 2 });
+  $container->add_component($comp, { row => 0, column => 2, height => 2 });
   
 Optionally, you may choose to override the default C<width> or C<height> of 1.
 Setting it to a something else will cause the component to consume that many
@@ -229,8 +229,8 @@ L<GridLayout|http://java.sun.com/docs/books/tutorial/uiswing/layout/grid.html>.
 
   my $lm = Layout::Manager::Grid->new(rows => 1, columns => 2);
   
-  $lm->add_component($comp1, { row => 1, column => 1 });
-  $lm->add_component($comp2, { row => 1, column => 2 });
+  $lm->add_component($comp1, { row => 0, column => 1 });
+  $lm->add_component($comp2, { row => 0, column => 2 });
 
   $lm->do_layout($container);
 
@@ -245,7 +245,7 @@ one of it's dimensions set.
 
 =head1 METHODS
 
-=head2 new (rows => $row, columns => $columns)
+=head2 new (rows => $rows, columns => $columns)
 
 Creates a new Layout::Manager::Grid.  Requires C<rows> and C<columns>.
 
