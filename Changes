@@ -1,5 +1,9 @@
 Revision history for Layout-Manager
 
+0.26
+  - Rewrite Flow, adding the ability to wrap it's contents. (east & west only)
+  - POD overhaul
+
 0.25
   - POD fixes
   - Fix behavior of Compass' nested layout

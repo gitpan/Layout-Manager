@@ -13,10 +13,22 @@ has 'anchor' => (
     default => sub { 'north' }
 );
 
+has 'expand' => (
+    is => 'rw',
+    isa => 'Bool',
+    default => sub { 1 }
+);
+
 has 'used' => (
     is => 'rw',
     isa => 'ArrayRef',
     default => sub { [0, 0] }
+);
+
+has 'wrap' => (
+    is => 'rw',
+    isa => 'Bool',
+    default => sub { 0 }
 );
 
 override('do_layout', sub {
@@ -32,64 +44,151 @@ override('do_layout', sub {
 
     my $anch = $self->anchor;
 
-    my $edge = 0;
+    my @lines;
+    my $yused = $oy;
+    my $xused = $ox;
 
-    my $bump = 0;
-    if($anch eq 'north') {
-        $bump = $oy;
-    } elsif($anch eq 'south') {
-        $bump = $oy;
-    } elsif($anch eq 'east') {
-        $bump = $ox;
-    } else {
-        $bump = $ox;
-    }
-
-    for(my $i = 0; $i < scalar(@{ $container->components }); $i++) {
-        my $comp = $container->get_component($i);
+    my $line = 0;
+    foreach my $comp (@{ $container->components }) {
 
         next unless defined($comp) && $comp->visible;
 
-        my $co = $comp->origin;
+        $comp->width($comp->minimum_width);
+        $comp->height($comp->minimum_height);
 
-        my $size = 0;
-
-        if($anch eq 'north') {
-            $size = $comp->minimum_height;
-            $co->x($ox);
-            $co->y($edge + $bump);
-            $comp->width($cwidth);
-            $comp->height($size);
-        } elsif($anch eq 'south') {
-            $size = $comp->minimum_height;
-            $co->x($ox);
-            $co->y($cheight - $edge + $bump - $size);
-            $comp->width($cwidth);
-            $comp->height($size);
-        } elsif($anch eq 'east') {
-            $size = $comp->minimum_width;
-            $co->x($cwidth - $edge + $bump - $size);
-            $co->y($oy);
-            $comp->width($size);
-            $comp->height($cheight);
+        # If we aren't wrapping, expand to fill the whole space
+        if(($anch eq 'north') || ($anch eq 'south')) {
+            unless($self->wrap) {
+                $comp->width($cwidth);
+            }
         } else {
-            $size = $comp->minimum_width;
-            $co->x($edge + $bump);
-            $co->y($oy);
-            $comp->width($size);
-            $comp->height($cheight);
+            unless($self->wrap) {
+                $comp->height($cheight);
+            }
         }
 
-        $edge += $size;
-        # $comp->prepared(1);
+        my $comp_height = $comp->height;
+        my $comp_width = $comp->width;
+
+        unless(defined($lines[$line])) {
+            $lines[$line] = {
+                tallest => $comp_height,
+                widest => $comp_width,
+                height => 0,
+                width => 0,
+                components => []
+            };
+        }
+
+        # Keep up with the tallest component we find
+        if($comp_height > $lines[$line]->{tallest}) {
+            $lines[$line]->{tallest} = $comp_height;
+        }
+        # Keep up with the widest component we find
+        if($comp_width > $lines[$line]->{widest}) {
+            $lines[$line]->{widest} = $comp_width;
+        }
+
+        my $co = $comp->origin;
+
+        if($anch eq 'north') {
+
+            # No wrapping
+            $co->x($ox);
+            $co->y($oy + $lines[$line]->{height});
+            $lines[$line]->{height} += $comp_height;
+            unless($lines[$line]->{width}) {
+                $lines[$line]->{width} = $comp_width;
+            }
+        } elsif($anch eq 'south') {
+
+            # No wrapping
+            $co->x($ox);
+            $co->y($oy + $cheight - $comp_height - $lines[$line]->{height});
+            $lines[$line]->{height} += $comp_height;
+            unless($lines[$line]->{width}) {
+                $lines[$line]->{width} = $comp_width;
+            }
+        } elsif($anch eq 'east') {
+
+            if(
+                # It doesn't matter if we are supposed to wrap if we have
+                # no width, we'll make this thing as big as it needs to be
+                ($cwidth > 0) &&
+                # if we are wrapping
+                ($self->wrap) &&
+                # and the current component would overflow...
+                ($lines[$line]->{width} + $comp_width > $cwidth) &&
+                scalar(@{ $lines[$line]->{components} })
+            ) {
+                # We've been asked to wrap and this component is too wide
+                # to fit.  Move down by the height of the tallest component
+                # then reset the tallest variable.
+                $yused += $lines[$line]->{tallest};
+                $co->x($cwidth - $comp_width - $ox);
+                $co->y($oy + $yused);
+
+                $line++;
+                $lines[$line]->{width} = $ox + $comp_width;
+                $lines[$line]->{tallest} = $comp_height;
+            } else {
+                $co->x($ox + $cwidth - $comp_width - $lines[$line]->{width});
+                $co->y($yused);
+                $lines[$line]->{width} += $comp_width;
+            }
+        } else {
+
+            # WEST
+            if(
+                # It doesn't matter if we are supposed to wrap if we have
+                # no width, we'll make this thing as big as it needs to be
+                ($cwidth > 0) &&
+                # if we are wrapping
+                ($self->wrap) &&
+                # and the current component would overflow...
+                ($lines[$line]->{width} + $comp_width > $cwidth) &&
+                scalar(@{ $lines[$line]->{components} })
+            ) {
+                # We've been asked to wrap and this component is too wide
+                # to fit.  Move down by the height of the tallest component
+                # then reset the tallest variable.
+                $yused += $lines[$line]->{tallest};
+                $co->x($ox);
+                $co->y($yused);
+
+                $line++;
+                $lines[$line]->{width} = $ox + $comp_width;
+                $lines[$line]->{tallest} = $comp_height;
+            } else {
+                $co->x($ox + $lines[$line]->{width});
+                $co->y($yused);
+                $lines[$line]->{width} += $comp_width;
+            }
+        }
+        push(@{ $lines[$line]->{components} }, $comp);
     }
 
-    if(($anch eq 'north') || ($anch eq 'south')) {
-        $self->used([$cwidth, $edge]);
-    } else {
-        $self->used([$edge, $cheight]);
+
+    my $fwidth = 0;
+    my $fheight = 0;
+
+    foreach my $l (@lines) {
+        unless($l->{height}) {
+            $l->{height} = $l->{tallest};
+        }
+        $fheight += $l->{height};
+        if($l->{width} > $fwidth) {
+            $fwidth += $l->{width};
+        }
     }
+    $self->used([$fwidth, $fheight]);
+
+    # Size our container, now that everything is done.
+    $container->minimum_width($fwidth);
+    $container->minimum_height($fheight);
+
     super;
+
     return 1;
 });
 
@@ -131,8 +230,8 @@ expand heights.
 
 Flow is similar to Java's
 L<FlowLayout|http://java.sun.com/docs/books/tutorial/uiswing/layout/flow.html>.
-It does not, however, center or wrap components.  These features may be added
-in the future if they are needed.
+It does not, however, center components.  This features may be added in the
+future if they are needed.
 
 =head1 SYNOPSIS
 
@@ -143,49 +242,35 @@ in the future if they are needed.
 
   $lm->do_layout($container);
 
-=head1 METHODS
+=head1 ATTRIBUTES
 
-=head2 Constructor
-
-=over 4
-
-=item I<new>
-
-Creates a new Layout::Manager::Flow.
-
-=back
-
-=head2 Instance Methods
-
-=over 4
-
-=item I<anchor>
+=head2 anchor
 
 The direction this manager is anchored.  Valid values are north, south, east
 and west.
 
-=item I<do_layout>
+=head2 used
+
+Returns the amount of space used an arrayref in the form of C<[ $width, $height ]>.
+
+=head2 wrap
+
+If set to a true value, then component will be 'wrapped' when they do not
+fit.  B<This currently only works for East and West anchored layouts.>
+
+=head1 METHODS
+
+=head2 do_layout
 
 Size and position the components in this layout.
-
-=item I<used>
-
-Returns the amount of space used an arrayref in the form of
-[ $width, $height ].
-
-=back
 
 =head1 AUTHOR
 
 Cory Watson, C<< <gphat@cpan.org> >>
 
-Infinity Interactive, L<http://www.iinteractive.com>
-
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2008 by Infinity Interactive, Inc.
-
-L<http://www.iinteractive.com>
+Copyright 2008 by Cory G Watson
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
