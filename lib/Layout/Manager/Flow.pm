@@ -72,8 +72,8 @@ override('do_layout', sub {
 
         unless(defined($lines[$line])) {
             $lines[$line] = {
-                tallest => $comp_height,
-                widest => $comp_width,
+                tallest => $comp_height || 0,
+                widest => $comp_width || 0,
                 height => 0,
                 width => 0,
                 components => []
