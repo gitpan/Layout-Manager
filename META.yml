@@ -23,7 +23,6 @@ requires:
   Geometry::Primitive: 0.16
   Graphics::Primitive: 0.43
   Moose: 0.79
-  MooseX::AttributeHelpers: 0.17
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.33
+version: 0.34
