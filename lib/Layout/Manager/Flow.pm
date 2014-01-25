@@ -5,7 +5,7 @@ extends 'Layout::Manager';
 
 use Moose::Util::TypeConstraints;
 
-enum 'Layout::Manager::Flow::Anchors' => qw(north south east west);
+enum 'Layout::Manager::Flow::Anchors', [qw(north south east west)];
 
 has 'anchor' => (
     is => 'rw',
@@ -179,7 +179,7 @@ override('do_layout', sub {
         }
         $fheight += $l->{height};
         if($l->{width} > $fwidth) {
-            $fwidth += $l->{width};
+            $fwidth = $l->{width};
         }
     }
     $self->used([$fwidth, $fheight]);
